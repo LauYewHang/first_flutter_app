@@ -1,5 +1,6 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -65,73 +66,147 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   @override
-  /*
-    Every widget defines a build() method that's automatically called every time the widget's circumstances change 
-    so that the widget is always up to date.
-  */
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  var selectedIndex = 0;
+  
+  @override
   Widget build(BuildContext context) {
-    // MyHomePage tracks changes to the app's current state using the watch method.
+    Widget page;
+      switch (selectedIndex) {
+        case 0:
+          page = GeneratorPage();
+          break;
+        case 1:
+          page = FavoritesPage();
+          break;
+        default:
+          throw UnimplementedError('no widget for $selectedIndex');
+      }
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Scaffold(
+          body: Row(
+            children: [
+              // The SafeArea ensures that its child is not obscured by a hardware notch or a status bar. 
+              // In this app, the widget wraps around NavigationRail to prevent the navigation buttons from being obscured by a mobile status bar, for example.
+              SafeArea(
+                child: NavigationRail(
+                  // You can change the extended: false line in NavigationRail to true.
+                  // This shows the labels next to the icons.
+                  extended: constraints.maxWidth >= 600,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.home),
+                      label: Text('Home'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.favorite),
+                      label: Text('Favourites'),
+                    ),
+                  ],
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (value) {
+                    setState(() {
+                      selectedIndex = value;
+                    });
+                  },
+                ),
+              ),
+              // Expanded let you express layouts where some children take only as much space as they need,
+              // and other widgets should take as much of the remaining room as possible.
+              Expanded(
+                child: Container(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: page,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+}
+
+
+class GeneratorPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
 
     IconData icon;
-    if (appState.favourites.contains(pair)){
+    if (appState.favourites.contains(pair)) {
       icon = Icons.favorite;
-    }else{
+    } else {
       icon = Icons.favorite_border;
     }
 
-    // Every build method must return a widget or (more typically) a nested tree of widgets. 
-    // In this case, the top-level widget is Scaffold.
-    return Scaffold(
-      // Column is one of the most basic layout widgets in Flutter. 
-      // It takes any number of children and puts them in a column from top to bottom. 
-      // By default, the column visually places its children at the top.
-      body: Center(
-        child: Column(
-          // make the thingy go to the centre (vertically, as in the middle of up and down)
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            caption(),
-            SizedBox(height: 20),
-            BigCard(pair: pair),
-            SizedBox(height: 10),
-            // This second Text widget takes appState, and accesses the only member of that class, current (which is a WordPair). 
-            // WordPair provides several helpful getters, such as asPascalCase or asSnakeCase.
-        
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: (){
-                    appState.toggleFavourite();
-                  },
-                    icon: Icon(icon),
-                    label: Text('Like'),
-                ),
-
-                SizedBox(width: 10),
-
-                ElevatedButton(
-                  onPressed: () {
-                    appState.getNext();
-                  },
-                  child: Text('Next'),
-                  // Notice how Flutter code makes heavy use of trailing commas. 
-                  // This particular comma doesn't need to be here, because children is the last (and also only) member of this particular Column parameter list. 
-                  // Yet it is generally a good idea to use trailing commas: they make adding more members trivial, and they also serve as a hint for Dart's auto-formatter to put a newline there. 
-                  // For more information, see https://docs.flutter.dev/tools/formatting
-                ),
-              ],
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          BigCard(pair: pair),
+          SizedBox(height: 10),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleFavourite();
+                },
+                icon: Icon(icon),
+                label: Text('Like'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  appState.getNext();
+                },
+                child: Text('Next'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
+
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    if (appState.favourites.isEmpty) {
+      return Center(
+        child: Text('No favourites yet.'),
+      );
+    }
+
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('You have '
+              '${appState.favourites.length} favourites:'),
+        ),
+        for (var pair in appState.favourites)
+          ListTile(
+            leading: Icon(Icons.favorite),
+            title: Text(pair.asLowerCase),
+          ),
+      ],
+    );
+  }
+}
+
 
 class caption extends StatelessWidget {
   const caption({
