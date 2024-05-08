@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
           // such as Colors.deepOrange or Colors.red. 
           // But you can, of course, choose any color. To define pure green with full opacity, for example, 
           // use Color.fromRGBO(0, 255, 0, 1.0). If you're a fan of hexadecimal numbers, there's always Color(0xFF00FF00).
-          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO(110, 0, 205, 0.7)),
+          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO(130, 0, 205, 0.7)),
         ),
         home: MyHomePage(),
       ),
